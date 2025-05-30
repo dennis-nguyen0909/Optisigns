@@ -4,7 +4,7 @@ services:
   github:
     branch: main
     deploy_on_push: true
-    repo: your-username/optisignbot
+    repo: dennis-nguyen0909/Optisigns
   build_command: pip install -r requirements.txt
   run_command: python main.py
   envs:
@@ -18,7 +18,7 @@ jobs:
   github:
     branch: main
     deploy_on_push: true
-    repo: your-username/optisignbot
+    repo: dennis-nguyen0909/Optisigns
   schedule: "0 0 * * *"  # Run once daily at midnight
   run_command: python cron_scrape.py
   envs:
