@@ -2,6 +2,9 @@ import requests
 import html2text
 import os
 import glob
+import json
+import hashlib
+from datetime import datetime
 from openai import OpenAI
 from dotenv import load_dotenv
 from typing import List, Dict, Optional
@@ -11,6 +14,7 @@ class OptiSignBot:
         self.max_articles = max_articles
         self.url_section = "https://support.optisigns.com/api/v2/help_center/en-us/sections"
         self.url_article = "https://support.optisigns.com/api/v2/help_center/en-us/sections/{section_id}/articles"
+        self.metadata_file = "articles/metadata.json"
         
         # Initialize OpenAI client
         self.client = OpenAI(api_key=openai_api_key)
@@ -20,6 +24,23 @@ class OptiSignBot:
         # Create articles directory if it doesn't exist
         if not os.path.exists("articles"):
             os.makedirs("articles")
+
+    def load_metadata(self) -> Dict:
+        """Load article metadata from file"""
+        if os.path.exists(self.metadata_file):
+            with open(self.metadata_file, 'r') as f:
+                return json.load(f)
+        return {}
+
+    def save_metadata(self, metadata: Dict) -> None:
+        """Save article metadata to file"""
+        with open(self.metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
+    def calculate_article_hash(self, article: Dict) -> str:
+        """Calculate hash of article content"""
+        content = f"{article['title']}{article['body']}"
+        return hashlib.md5(content.encode()).hexdigest()
 
     def fetch_all_sections(self) -> Dict:
         response = requests.get(self.url_section)
@@ -62,15 +83,21 @@ class OptiSignBot:
             f.write(markdown)
 
     def delete_all_files(self) -> None:
-        """Delete all files in the articles directory"""
+        """Delete all files in the articles directory except metadata.json"""
         for file in os.listdir("articles"):
-            os.remove(f"articles/{file}")
+            if file != "metadata.json":
+                os.remove(f"articles/{file}")
 
     def scrape_articles(self) -> int:
-        self.delete_all_files()
+        """Scrape articles with delta updates"""
+        # Load existing metadata
+        metadata = self.load_metadata()
         section_ids = self.get_all_section_ids()
         
         total_articles = 0
+        updated_articles = 0
+        new_articles = 0
+        
         for section_id in section_ids:
             if total_articles >= self.max_articles:
                 break
@@ -79,12 +106,43 @@ class OptiSignBot:
             for article in all_articles:
                 if total_articles >= self.max_articles:
                     break
-                self.save_as_markdown(article)
-                total_articles += 1
+                    
+                article_id = str(article['id'])
+                current_hash = self.calculate_article_hash(article)
+                last_modified = article.get('updated_at', article.get('created_at'))
                 
+                # Check if article needs update
+                needs_update = False
+                if article_id not in metadata:
+                    needs_update = True
+                    new_articles += 1
+                elif (metadata[article_id]['hash'] != current_hash or 
+                      metadata[article_id]['last_modified'] != last_modified):
+                    needs_update = True
+                    updated_articles += 1
+                
+                if needs_update:
+                    self.save_as_markdown(article)
+                    metadata[article_id] = {
+                        'hash': current_hash,
+                        'last_modified': last_modified,
+                        'title': article['title'],
+                        'slug': article["title"].lower().replace(" ", "-").replace("/", "-")
+                    }
+                
+                total_articles += 1
+        
+        # Save updated metadata
+        self.save_metadata(metadata)
+        
+        print(f"Total articles processed: {total_articles}")
+        print(f"New articles: {new_articles}")
+        print(f"Updated articles: {updated_articles}")
+        
         return total_articles
 
     def setup_openai_assistant(self) -> None:
+        """Set up OpenAI assistant with vector store"""
         self.assistant = self.client.beta.assistants.create(
             name="OptiBot",
             instructions="You are OptiBot, the customer-support bot for OptiSigns.com. Tone: helpful, factual, concise. Only answer using the uploaded docs. Max 5 bullet points; else link to the doc. Cite up to 3 'Article URL:' lines per reply.",
@@ -92,16 +150,20 @@ class OptiSignBot:
             tools=[{"type": "file_search"}],
         )
 
+        # Create new vector store
         self.vector_store = self.client.vector_stores.create(name="OptiSigns")
 
+        # Get all markdown files
         file_paths = glob.glob("articles/*.md")
         file_streams = [open(path, "rb") for path in file_paths]
 
+        # Upload files to vector store
         file_batch = self.client.vector_stores.file_batches.upload_and_poll(
             vector_store_id=self.vector_store.id,
             files=file_streams
         )
 
+        # Update assistant with vector store
         self.assistant = self.client.beta.assistants.update(
             assistant_id=self.assistant.id,
             tool_resources={"file_search": {"vector_store_ids": [self.vector_store.id]}}
