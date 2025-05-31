@@ -1,4 +1,4 @@
-from app.optisign_bot import OptiSignBot
+from optisign_bot import OptiSignBot
 from dotenv import load_dotenv
 import os
 import sys

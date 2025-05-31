@@ -24,9 +24,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
-COPY app/ /app/app/
-COPY main.py /app/
-COPY cron_scrape.py /app/
+COPY main.py .
+COPY app/ ./app/
 
 # Create a non-root user
 RUN useradd -m appuser && chown -R appuser:appuser /app

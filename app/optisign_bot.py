@@ -83,7 +83,6 @@ class OptiSignBot:
             f.write(markdown)
 
     def delete_all_files(self) -> None:
-        """Delete all files in the articles directory except metadata.json"""
         for file in os.listdir("articles"):
             if file != "metadata.json":
                 os.remove(f"articles/{file}")
