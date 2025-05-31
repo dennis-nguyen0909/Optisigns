@@ -34,14 +34,6 @@ docker build -t optisignbot .
 docker run -e OPENAI_API_KEY=your_key optisignbot
 ```
 
-### Scheduled Worker
-```bash
-python worker_cron.py  # Daily scraping at midnight UTC
-```
-
-## Daily Job Logs
-
-View automated scraping logs: [GitHub Actions Logs](https://github.com/dennis-nguyen0909/Optisigns/actions)
 
 ## Playground Demo
 
