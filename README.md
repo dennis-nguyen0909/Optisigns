@@ -6,7 +6,7 @@ AI-powered customer support chatbot for OptiSigns.com that scrapes help center a
 
 **Prerequisites**: Python 3.9+, Docker, OpenAI API key
 
-**Environment Variables**: Create `.env` file:
+**Environment Variables**:
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
 ```
@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ## How to Run Locally
 
-### Option 1: Python
+### Python
 ```bash
 git clone https://github.com/dennis-nguyen0909/Optisigns.git
 cd OptisignBot
@@ -28,17 +28,25 @@ pip install -r requirements.txt
 python main.py
 ```
 
-### Option 2: Docker
+### Docker
 ```bash
 docker build -t optisignbot .
 docker run -e OPENAI_API_KEY=your_key optisignbot
 ```
 
-**Note**: Container runs once and exits with code 0 (batch job).
-
-### Option 3: Scheduled Worker
+### Scheduled Worker
 ```bash
 python worker_cron.py  # Daily scraping at midnight UTC
 ```
+
+## Daily Job Logs
+
+View automated scraping logs: [GitHub Actions Logs](https://github.com/dennis-nguyen0909/Optisigns/actions)
+
+## Playground Demo
+
+![Alt text](./screenshots/playground-demo.png)
+
+*Example of the AI assistant responding to customer support queries using scraped OptiSigns help center content.*
 
 
