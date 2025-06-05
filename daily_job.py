@@ -41,10 +41,10 @@ def run_daily_job():
         total_articles = bot.scrape_articles()
         logger.info(f"✅ Scraping completed. Total articles processed: {total_articles}")
         
-        # Setup OpenAI assistant
-        logger.info("🤖 Setting up OpenAI assistant...")
-        bot.setup_openai_assistant()
-        logger.info("✅ OpenAI assistant setup completed")
+        # Setup OpenAI assistant (comment out for testing to avoid API spam)
+        # logger.info("🤖 Setting up OpenAI assistant...")
+        # bot.setup_openai_assistant()
+        # logger.info("✅ OpenAI assistant setup completed")
         
         logger.info(f"🎉 Daily job completed successfully at {datetime.now().isoformat()}")
         
@@ -53,10 +53,16 @@ def run_daily_job():
 
 def main():
     logger.info("🕐 OptisignBot Daily Worker Started")
-    logger.info("📅 Schedule: Every day at 00:00 UTC")
     
-    # Schedule the job to run daily at midnight UTC
-    schedule.every().day.at("00:00").do(run_daily_job)
+    # ========== PRODUCTION MODE ==========
+    # logger.info("📅 Schedule: Every day at 00:00 UTC")
+    # schedule.every().day.at("00:00").do(run_daily_job)
+    # time.sleep(60)  # Check every minute
+    
+    # ========== TEST MODE ==========
+    logger.info("🧪 TEST MODE: Schedule every 20 seconds")
+    schedule.every(20).seconds.do(run_daily_job)
+    sleep_time = 1  # Check every second for faster testing
     
     # Run once immediately for testing (optional)
     logger.info("🧪 Running job immediately for initial setup...")
@@ -67,7 +73,7 @@ def main():
     try:
         while True:
             schedule.run_pending()
-            time.sleep(60)  # Check every minute
+            time.sleep(sleep_time)
     except KeyboardInterrupt:
         logger.info("👋 Worker stopped by user")
     except Exception as e:

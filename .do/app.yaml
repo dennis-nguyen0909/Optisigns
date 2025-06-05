@@ -14,7 +14,7 @@ workers:
   - key: OPENAI_API_KEY
     scope: RUN_TIME
     type: SECRET
-    value: your-openai-api-key-here
+    value: ${OPENAI_API_KEY}
   - key: TZ
     scope: RUN_TIME
     type: GENERAL
