@@ -11,10 +11,8 @@ RUN pip install -r requirements.txt
 # Copy application code
 COPY . .
 
-# Run the application
-CMD ["python", "main.py"] 
-
-
+# Run the daily worker with schedule
+CMD ["python", "daily_job.py"]
 
 # docker build -t optisign-bot .
 # docker run -it --env-file .env optisign-bot
