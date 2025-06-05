@@ -4,7 +4,7 @@ workers:
 - name: optisign-daily-worker
   source_dir: /
   github:
-    repo: your-username/your-repo-name  # Update this with your actual GitHub repo
+    repo: dennis-nguyen0909/Optisigns
     branch: main
   run_command: python daily_job.py
   environment_slug: python
@@ -14,7 +14,11 @@ workers:
   - key: OPENAI_API_KEY
     scope: RUN_TIME
     type: SECRET
-    value: your-openai-api-key-here  # You'll set this in DO dashboard
+    value: your-openai-api-key-here
+  - key: TZ
+    scope: RUN_TIME
+    type: GENERAL
+    value: Asia/Ho_Chi_Minh
 alerts:
 - rule: DEPLOYMENT_FAILED
 - rule: DOMAIN_FAILED 
